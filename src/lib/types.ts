@@ -56,6 +56,7 @@ export interface ShortlistItem {
   matchScore: number; // 0-100
   matchReasons: string[];
   neighborhoodSignal?: NeighborhoodSignal;
+  addedByClient?: boolean; // client-picked, bypasses the eligibility gate entirely
 }
 
 export interface ClientContact {

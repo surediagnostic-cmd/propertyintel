@@ -35,7 +35,11 @@ export function ShortlistView({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-medium text-neutral-400">
-                  #{i + 1} match · {item.matchScore}/100
+                  {item.addedByClient ? (
+                    <span className="text-blue-700">Added by you</span>
+                  ) : (
+                    <>#{i + 1} match · {item.matchScore}/100</>
+                  )}
                 </p>
                 <h2 className="text-lg font-medium">{item.listing.title}</h2>
                 <p className="text-sm text-neutral-500">

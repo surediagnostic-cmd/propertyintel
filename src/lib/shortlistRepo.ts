@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
-import type { ClientContact, SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
+import type { ClientContact, Listing, SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
 import { getMockNeighborhoodSignal } from "@/lib/scraping/mockNeighborhoodSignals";
+import { scoreListing } from "@/lib/matching/score";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { memoryStore } from "@/lib/store/memoryStore";
 import { listingToRow, rowToListing } from "@/lib/listingsRepo";
@@ -82,7 +83,7 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
 
   const { data: itemRows, error: itemsError } = await supabase
     .from("shortlist_items")
-    .select("match_score, match_reasons, rank, listings(*)")
+    .select("match_score, match_reasons, rank, added_by_client, listings(*)")
     .eq("shortlist_id", id)
     .order("rank", { ascending: true });
   if (itemsError) throw itemsError;
@@ -109,6 +110,7 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
       matchScore: row.match_score,
       matchReasons: row.match_reasons ?? [],
       neighborhoodSignal: getMockNeighborhoodSignal(listing.city, listing.neighborhood),
+      addedByClient: row.added_by_client ?? false,
     };
   });
 
@@ -177,4 +179,46 @@ export async function sendToAgent(shortlistId: string, contact: ClientContact): 
     .update({ submitted_to_agent_at: now })
     .eq("id", shortlistId);
   if (updateError) throw updateError;
+}
+
+/**
+ * A client adding a listing they found themselves to their own shortlist —
+ * deliberately bypasses isShortlistEligible (the 72h/mandate-contact gate):
+ * the client is vouching for this one directly, not asking the matching
+ * engine to find it.
+ */
+export async function addShortlistItem(shortlistId: string, listing: Listing): Promise<void> {
+  const shortlist = await getShortlist(shortlistId);
+  if (!shortlist) throw new Error("Shortlist not found");
+
+  const { score, reasons } = scoreListing(listing, shortlist.criteria);
+  const nextRank = shortlist.items.length + 1;
+
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    memoryStore.addShortlistItem(shortlistId, {
+      listing,
+      matchScore: score,
+      matchReasons: reasons,
+      addedByClient: true,
+    });
+    return;
+  }
+
+  const { data: listingRow, error: listingError } = await supabase
+    .from("listings")
+    .upsert(listingToRow(listing), { onConflict: "source_url" })
+    .select("id")
+    .single();
+  if (listingError) throw listingError;
+
+  const { error: itemError } = await supabase.from("shortlist_items").insert({
+    shortlist_id: shortlistId,
+    listing_id: listingRow.id,
+    match_score: score,
+    match_reasons: reasons,
+    rank: nextRank,
+    added_by_client: true,
+  });
+  if (itemError) throw itemError;
 }
