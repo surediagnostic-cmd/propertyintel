@@ -30,16 +30,20 @@ export default async function AgentDashboard() {
             <div>
               <p className="font-medium">
                 {s.criteria.intent} in {s.criteria.city} · {s.criteria.bedrooms} bed
+                {s.clientContact && <> · {s.clientContact.name} ({s.clientContact.phone})</>}
               </p>
               <p className="text-sm text-neutral-500">
                 {s.items.length} matches · {new Date(s.createdAt).toLocaleString()}
               </p>
             </div>
-            {s.agentNotes ? (
-              <span className="text-xs text-green-700">Annotated</span>
-            ) : (
-              <span className="text-xs text-neutral-400">Needs review</span>
-            )}
+            <div className="flex flex-col items-end gap-1">
+              {s.submittedToAgentAt && <span className="text-xs font-medium text-blue-700">Client requested</span>}
+              {s.agentNotes ? (
+                <span className="text-xs text-green-700">Annotated</span>
+              ) : (
+                <span className="text-xs text-neutral-400">Needs review</span>
+              )}
+            </div>
           </Link>
         ))}
       </div>

@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
+import type { ClientContact, SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
 import { getMockNeighborhoodSignal } from "@/lib/scraping/mockNeighborhoodSignals";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { memoryStore } from "@/lib/store/memoryStore";
@@ -75,7 +75,7 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
 
   const { data: shortlistRow, error: shortlistError } = await supabase
     .from("shortlists")
-    .select("id, agent_notes, created_at, search_id, searches(*)")
+    .select("id, agent_notes, created_at, submitted_to_agent_at, search_id, searches(*)")
     .eq("id", id)
     .single();
   if (shortlistError || !shortlistRow) return undefined;
@@ -118,6 +118,10 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
     items,
     createdAt: shortlistRow.created_at,
     agentNotes: shortlistRow.agent_notes ?? undefined,
+    clientContact: search.client_name
+      ? { name: search.client_name, phone: search.client_phone, email: search.client_email ?? undefined }
+      : undefined,
+    submittedToAgentAt: shortlistRow.submitted_to_agent_at ?? undefined,
   };
 }
 
@@ -143,4 +147,34 @@ export async function updateAgentNotes(id: string, notes: string): Promise<void>
   }
   const { error } = await supabase.from("shortlists").update({ agent_notes: notes }).eq("id", id);
   if (error) throw error;
+}
+
+/** Consumer -> agent handoff: records who to follow up with and when they asked for review. */
+export async function sendToAgent(shortlistId: string, contact: ClientContact): Promise<void> {
+  const now = new Date().toISOString();
+  const supabase = getServerSupabase();
+
+  if (!supabase) {
+    memoryStore.sendToAgent(shortlistId, contact, now);
+    return;
+  }
+
+  const { data: shortlistRow, error: shortlistError } = await supabase
+    .from("shortlists")
+    .select("search_id")
+    .eq("id", shortlistId)
+    .single();
+  if (shortlistError || !shortlistRow) throw shortlistError ?? new Error("Shortlist not found");
+
+  const { error: searchError } = await supabase
+    .from("searches")
+    .update({ client_name: contact.name, client_phone: contact.phone, client_email: contact.email ?? null })
+    .eq("id", shortlistRow.search_id);
+  if (searchError) throw searchError;
+
+  const { error: updateError } = await supabase
+    .from("shortlists")
+    .update({ submitted_to_agent_at: now })
+    .eq("id", shortlistId);
+  if (updateError) throw updateError;
 }

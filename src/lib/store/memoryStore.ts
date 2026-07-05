@@ -1,4 +1,4 @@
-import type { City, Listing, ListingIntent, Shortlist } from "@/lib/types";
+import type { City, ClientContact, Listing, ListingIntent, Shortlist } from "@/lib/types";
 
 /**
  * Dev-only fallback used when Supabase isn't configured yet (see
@@ -32,6 +32,13 @@ export const memoryStore = {
   updateAgentNotes(id: string, notes: string) {
     const shortlist = shortlists.get(id);
     if (shortlist) shortlist.agentNotes = notes;
+  },
+  sendToAgent(id: string, contact: ClientContact, submittedAt: string) {
+    const shortlist = shortlists.get(id);
+    if (shortlist) {
+      shortlist.clientContact = contact;
+      shortlist.submittedToAgentAt = submittedAt;
+    }
   },
   saveListing(listing: Listing) {
     listings.set(listing.source.url, listing);

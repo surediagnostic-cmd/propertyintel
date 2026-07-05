@@ -58,10 +58,18 @@ export interface ShortlistItem {
   neighborhoodSignal?: NeighborhoodSignal;
 }
 
+export interface ClientContact {
+  name: string;
+  phone: string;
+  email?: string;
+}
+
 export interface Shortlist {
   id: string;
   criteria: SearchCriteria;
   items: ShortlistItem[];
   createdAt: string;
   agentNotes?: string;
+  clientContact?: ClientContact;
+  submittedToAgentAt?: string;
 }
