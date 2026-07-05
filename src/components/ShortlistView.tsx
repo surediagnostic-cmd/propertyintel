@@ -4,6 +4,14 @@ function formatNaira(amount: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount);
 }
 
+function formatListedAt(iso: string) {
+  const date = new Date(iso);
+  const hoursAgo = Math.round((Date.now() - date.getTime()) / (1000 * 60 * 60));
+  const relative = hoursAgo <= 0 ? "just now" : hoursAgo === 1 ? "1 hour ago" : `${hoursAgo} hours ago`;
+  const absolute = new Intl.DateTimeFormat("en-NG", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return `${relative} (${absolute})`;
+}
+
 export function ShortlistView({
   shortlist,
   showMandateContact = false,
@@ -60,7 +68,7 @@ export function ShortlistView({
             )}
 
             <p className="mt-3 text-xs text-neutral-400">
-              Source: {item.listing.source.site} ·{" "}
+              Source: {item.listing.source.site} · Listed {formatListedAt(item.listing.source.scrapedAt)} ·{" "}
               <a href={item.listing.source.url} target="_blank" rel="noreferrer" className="underline">
                 view original listing
               </a>
