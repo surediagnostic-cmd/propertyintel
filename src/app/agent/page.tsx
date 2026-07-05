@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { listShortlists } from "@/lib/shortlistRepo";
 
+// No dynamic route segment here, so Next would otherwise be free to
+// prerender this list at build time and serve a stale snapshot — this data
+// changes on every search/send-to-agent, so it must always be fresh.
+export const dynamic = "force-dynamic";
+
 export default async function AgentDashboard() {
   const shortlists = await listShortlists();
 
