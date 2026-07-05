@@ -6,7 +6,12 @@ export default async function AgentDashboard() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
-      <h1 className="text-2xl font-semibold">Agent dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Agent dashboard</h1>
+        <Link href="/agent/add-listing" className="rounded bg-neutral-900 px-4 py-2 text-sm text-white">
+          + Add listing
+        </Link>
+      </div>
       <p className="mt-2 text-sm text-neutral-500">
         Client searches and their generated shortlists. Open one to review and add your notes
         before sending the client a report.

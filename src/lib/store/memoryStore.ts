@@ -1,4 +1,4 @@
-import type { Shortlist } from "@/lib/types";
+import type { City, Listing, ListingIntent, Shortlist } from "@/lib/types";
 
 /**
  * Dev-only fallback used when Supabase isn't configured yet (see
@@ -10,9 +10,14 @@ import type { Shortlist } from "@/lib/types";
  * gets duplicated (API writes and page reads would land in different
  * instances). globalThis is the one thing guaranteed to be shared.
  */
-const globalForStore = globalThis as unknown as { __propertyIntelShortlists?: Map<string, Shortlist> };
+const globalForStore = globalThis as unknown as {
+  __propertyIntelShortlists?: Map<string, Shortlist>;
+  __propertyIntelListings?: Map<string, Listing>; // keyed by source url
+};
 const shortlists = globalForStore.__propertyIntelShortlists ?? new Map<string, Shortlist>();
 globalForStore.__propertyIntelShortlists = shortlists;
+const listings = globalForStore.__propertyIntelListings ?? new Map<string, Listing>();
+globalForStore.__propertyIntelListings = listings;
 
 export const memoryStore = {
   saveShortlist(shortlist: Shortlist) {
@@ -27,5 +32,11 @@ export const memoryStore = {
   updateAgentNotes(id: string, notes: string) {
     const shortlist = shortlists.get(id);
     if (shortlist) shortlist.agentNotes = notes;
+  },
+  saveListing(listing: Listing) {
+    listings.set(listing.source.url, listing);
+  },
+  getListings(city: City, intent: ListingIntent): Listing[] {
+    return Array.from(listings.values()).filter((l) => l.city === city && l.intent === intent);
   },
 };

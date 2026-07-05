@@ -1,8 +1,9 @@
 import { randomUUID } from "crypto";
-import type { Listing, SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
+import type { SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
 import { getMockNeighborhoodSignal } from "@/lib/scraping/mockNeighborhoodSignals";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { memoryStore } from "@/lib/store/memoryStore";
+import { listingToRow, rowToListing } from "@/lib/listingsRepo";
 
 /**
  * Persists a search + its generated shortlist to Supabase when configured,
@@ -50,26 +51,7 @@ export async function createShortlist(criteria: SearchCriteria, items: Shortlist
   for (const [rank, item] of items.entries()) {
     const { data: listingRow, error: listingError } = await supabase
       .from("listings")
-      .upsert(
-        {
-          title: item.listing.title,
-          intent: item.listing.intent,
-          city: item.listing.city,
-          neighborhood: item.listing.neighborhood,
-          price: item.listing.price,
-          bedrooms: item.listing.bedrooms,
-          bathrooms: item.listing.bathrooms,
-          amenities: item.listing.amenities,
-          photos: item.listing.photos,
-          source_site: item.listing.source.site,
-          source_url: item.listing.source.url,
-          scraped_at: item.listing.source.scrapedAt,
-          contact_name: item.listing.mandateContact?.name ?? null,
-          contact_phone: item.listing.mandateContact?.phone ?? null,
-          contact_email: item.listing.mandateContact?.email ?? null,
-        },
-        { onConflict: "source_url" },
-      )
+      .upsert(listingToRow(item.listing), { onConflict: "source_url" })
       .select("id")
       .single();
     if (listingError) throw listingError;
@@ -121,30 +103,7 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
 
   const items: ShortlistItem[] = (itemRows ?? []).map((row) => {
     const listingRow = Array.isArray(row.listings) ? row.listings[0] : row.listings;
-    const listing: Listing = {
-      id: listingRow.id,
-      title: listingRow.title,
-      intent: listingRow.intent,
-      city: listingRow.city,
-      neighborhood: listingRow.neighborhood,
-      price: listingRow.price,
-      bedrooms: listingRow.bedrooms,
-      bathrooms: listingRow.bathrooms,
-      amenities: listingRow.amenities ?? [],
-      photos: listingRow.photos ?? [],
-      source: {
-        site: listingRow.source_site,
-        url: listingRow.source_url,
-        scrapedAt: listingRow.scraped_at,
-      },
-      mandateContact: listingRow.contact_name
-        ? {
-            name: listingRow.contact_name,
-            phone: listingRow.contact_phone,
-            email: listingRow.contact_email ?? undefined,
-          }
-        : undefined,
-    };
+    const listing = rowToListing(listingRow);
     return {
       listing,
       matchScore: row.match_score,
