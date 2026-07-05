@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { ClientContact, Listing, SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
+import type { AgentRating, ClientContact, Listing, SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
 import { getMockNeighborhoodSignal } from "@/lib/scraping/mockNeighborhoodSignals";
 import { scoreListing } from "@/lib/matching/score";
 import { getServerSupabase } from "@/lib/supabase/server";
@@ -83,7 +83,7 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
 
   const { data: itemRows, error: itemsError } = await supabase
     .from("shortlist_items")
-    .select("match_score, match_reasons, rank, added_by_client, listings(*)")
+    .select("match_score, match_reasons, rank, added_by_client, agent_rating, listings(*)")
     .eq("shortlist_id", id)
     .order("rank", { ascending: true });
   if (itemsError) throw itemsError;
@@ -111,6 +111,7 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
       matchReasons: row.match_reasons ?? [],
       neighborhoodSignal: getMockNeighborhoodSignal(listing.city, listing.neighborhood),
       addedByClient: row.added_by_client ?? false,
+      agentRating: row.agent_rating ?? undefined,
     };
   });
 
@@ -221,4 +222,19 @@ export async function addShortlistItem(shortlistId: string, listing: Listing): P
     added_by_client: true,
   });
   if (itemError) throw itemError;
+}
+
+/** An agent's own real assessment of one listing within a shortlist. */
+export async function updateItemRating(shortlistId: string, listingId: string, rating: AgentRating): Promise<void> {
+  const supabase = getServerSupabase();
+  if (!supabase) {
+    memoryStore.updateItemRating(shortlistId, listingId, rating);
+    return;
+  }
+  const { error } = await supabase
+    .from("shortlist_items")
+    .update({ agent_rating: rating })
+    .eq("shortlist_id", shortlistId)
+    .eq("listing_id", listingId);
+  if (error) throw error;
 }

@@ -29,6 +29,16 @@ export interface MandateContact {
   email?: string;
 }
 
+// One-time fees on top of rent, common in the Nigerian rental market — used
+// to compute a total move-in cost. All optional: only set when a listing
+// (or whoever added it) actually states them, never guessed.
+export interface FeeBreakdown {
+  agencyFee?: number;
+  agreementFee?: number;
+  legalFee?: number;
+  cautionFee?: number;
+}
+
 export interface Listing {
   id: string;
   title: string;
@@ -42,6 +52,11 @@ export interface Listing {
   photos: string[];
   source: ListingSource;
   mandateContact?: MandateContact;
+  feeBreakdown?: FeeBreakdown;
+  furnished?: boolean;
+  parkingSpaces?: number;
+  floor?: string; // e.g. "Ground", "1st", "Duplex"
+  postedAt?: string; // when the listing was originally posted, distinct from source.scrapedAt
 }
 
 export interface NeighborhoodSignal {
@@ -51,12 +66,17 @@ export interface NeighborhoodSignal {
   isVerified: false; // always false until Phase 2 field verification exists
 }
 
+// An agent's own real assessment of a listing — never AI-generated (see
+// CLAUDE.md: don't claim unverified accuracy). Only ever set by a human.
+export type AgentRating = "excellent" | "good" | "fair" | "avoid";
+
 export interface ShortlistItem {
   listing: Listing;
   matchScore: number; // 0-100
   matchReasons: string[];
   neighborhoodSignal?: NeighborhoodSignal;
   addedByClient?: boolean; // client-picked, bypasses the eligibility gate entirely
+  agentRating?: AgentRating;
 }
 
 export interface ClientContact {

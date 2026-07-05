@@ -15,6 +15,13 @@ export function AddListingForm() {
   const [bedrooms, setBedrooms] = useState(0);
   const [bathrooms, setBathrooms] = useState(0);
   const [amenities, setAmenities] = useState<string[]>([]);
+  const [furnished, setFurnished] = useState(false);
+  const [parkingSpaces, setParkingSpaces] = useState(0);
+  const [floor, setFloor] = useState("");
+  const [agencyFee, setAgencyFee] = useState(0);
+  const [agreementFee, setAgreementFee] = useState(0);
+  const [legalFee, setLegalFee] = useState(0);
+  const [cautionFee, setCautionFee] = useState(0);
   const [mandateName, setMandateName] = useState("");
   const [mandatePhone, setMandatePhone] = useState("");
   const [mandateEmail, setMandateEmail] = useState("");
@@ -84,6 +91,13 @@ export function AddListingForm() {
           bathrooms,
           amenities,
           photos: [],
+          furnished,
+          parkingSpaces,
+          floor: floor || undefined,
+          agencyFee: agencyFee || undefined,
+          agreementFee: agreementFee || undefined,
+          legalFee: legalFee || undefined,
+          cautionFee: cautionFee || undefined,
           mandateName,
           mandatePhone,
           mandateEmail: mandateEmail || undefined,
@@ -222,6 +236,80 @@ export function AddListingForm() {
               {a}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <label className="block">
+          <span className="text-sm font-medium">Parking spaces</span>
+          <input
+            type="number"
+            value={parkingSpaces}
+            onChange={(e) => setParkingSpaces(Number(e.target.value))}
+            min={0}
+            className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium">Floor</span>
+          <input
+            type="text"
+            value={floor}
+            onChange={(e) => setFloor(e.target.value)}
+            placeholder="e.g. Ground, 1st"
+            className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+          />
+        </label>
+        <label className="flex items-center gap-2 pt-6">
+          <input type="checkbox" checked={furnished} onChange={(e) => setFurnished(e.target.checked)} />
+          <span className="text-sm font-medium">Furnished</span>
+        </label>
+      </div>
+
+      <div>
+        <p className="text-sm font-medium">One-time fees (₦, optional)</p>
+        <p className="text-xs text-neutral-500">Only fill in what the listing actually states — leave the rest blank.</p>
+        <div className="mt-2 grid grid-cols-4 gap-4">
+          <label className="block">
+            <span className="text-xs">Agency fee</span>
+            <input
+              type="number"
+              value={agencyFee}
+              onChange={(e) => setAgencyFee(Number(e.target.value))}
+              min={0}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs">Agreement fee</span>
+            <input
+              type="number"
+              value={agreementFee}
+              onChange={(e) => setAgreementFee(Number(e.target.value))}
+              min={0}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs">Legal fee</span>
+            <input
+              type="number"
+              value={legalFee}
+              onChange={(e) => setLegalFee(Number(e.target.value))}
+              min={0}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs">Caution fee</span>
+            <input
+              type="number"
+              value={cautionFee}
+              onChange={(e) => setCautionFee(Number(e.target.value))}
+              min={0}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            />
+          </label>
         </div>
       </div>
 

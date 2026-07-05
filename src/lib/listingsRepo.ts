@@ -19,6 +19,14 @@ export function listingToRow(listing: Listing) {
     contact_name: listing.mandateContact?.name ?? null,
     contact_phone: listing.mandateContact?.phone ?? null,
     contact_email: listing.mandateContact?.email ?? null,
+    agency_fee: listing.feeBreakdown?.agencyFee ?? null,
+    agreement_fee: listing.feeBreakdown?.agreementFee ?? null,
+    legal_fee: listing.feeBreakdown?.legalFee ?? null,
+    caution_fee: listing.feeBreakdown?.cautionFee ?? null,
+    furnished: listing.furnished ?? null,
+    parking_spaces: listing.parkingSpaces ?? null,
+    floor: listing.floor ?? null,
+    posted_at: listing.postedAt ?? null,
   };
 }
 
@@ -39,6 +47,19 @@ export function rowToListing(row: any): Listing {
     mandateContact: row.contact_name
       ? { name: row.contact_name, phone: row.contact_phone, email: row.contact_email ?? undefined }
       : undefined,
+    feeBreakdown:
+      row.agency_fee || row.agreement_fee || row.legal_fee || row.caution_fee
+        ? {
+            agencyFee: row.agency_fee ?? undefined,
+            agreementFee: row.agreement_fee ?? undefined,
+            legalFee: row.legal_fee ?? undefined,
+            cautionFee: row.caution_fee ?? undefined,
+          }
+        : undefined,
+    furnished: row.furnished ?? undefined,
+    parkingSpaces: row.parking_spaces ?? undefined,
+    floor: row.floor ?? undefined,
+    postedAt: row.posted_at ?? undefined,
   };
 }
 

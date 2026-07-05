@@ -14,6 +14,13 @@ const bodySchema = z.object({
   bathrooms: z.number().int().min(0),
   amenities: z.array(z.string()).default([]),
   photos: z.array(z.string()).default([]),
+  furnished: z.boolean().optional(),
+  parkingSpaces: z.number().int().min(0).optional(),
+  floor: z.string().optional(),
+  agencyFee: z.number().min(0).optional(),
+  agreementFee: z.number().min(0).optional(),
+  legalFee: z.number().min(0).optional(),
+  cautionFee: z.number().min(0).optional(),
   mandateName: z.string().min(1),
   mandatePhone: z.string().min(1),
   mandateEmail: z.string().email().optional().or(z.literal("")),
@@ -39,6 +46,18 @@ export async function POST(request: Request) {
     photos: data.photos,
     source: { site: inferSourceSite(data.url), url: data.url, scrapedAt: new Date().toISOString() },
     mandateContact: { name: data.mandateName, phone: data.mandatePhone, email: data.mandateEmail || undefined },
+    furnished: data.furnished,
+    parkingSpaces: data.parkingSpaces,
+    floor: data.floor,
+    feeBreakdown:
+      data.agencyFee || data.agreementFee || data.legalFee || data.cautionFee
+        ? {
+            agencyFee: data.agencyFee,
+            agreementFee: data.agreementFee,
+            legalFee: data.legalFee,
+            cautionFee: data.cautionFee,
+          }
+        : undefined,
   });
 
   return NextResponse.json({ ok: true });
