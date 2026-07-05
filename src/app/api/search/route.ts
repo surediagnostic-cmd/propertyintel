@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { buildShortlist } from "@/lib/matching/score";
-import { mockAdapter } from "@/lib/scraping/adapter";
+import { propertyProAdapter } from "@/lib/scraping/propertyProAdapter";
 import { createShortlist } from "@/lib/shortlistRepo";
+
+// The live PropertyPro scrape does several sequential, rate-limited fetches
+// (see propertyProAdapter's DETAIL_FETCH_DELAY_MS) which can run past
+// Vercel's default serverless timeout.
+export const maxDuration = 60;
 
 const criteriaSchema = z.object({
   intent: z.enum(["rent", "lease", "buy"]),
@@ -28,14 +33,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "minBudget cannot exceed maxBudget" }, { status: 400 });
   }
 
-  // Real scraping is deferred pending per-site ToS review (see CLAUDE.md);
-  // this pulls from the mock inventory so the full flow is testable now.
-  const listings = await mockAdapter.fetchListings({ city: criteria.city, intent: criteria.intent });
+  const listings = await propertyProAdapter.fetchListings({ city: criteria.city, intent: criteria.intent });
   const items = buildShortlist(listings, criteria);
 
   if (items.length === 0) {
     return NextResponse.json(
-      { error: "No listings found for this city/intent yet. Try a different city or intent." },
+      {
+        error:
+          "No eligible listings found for this city/intent right now (nothing currently live on PropertyPro matched, or matched but lacked a recent verification/contact). Try a different city or intent.",
+      },
       { status: 404 },
     );
   }
