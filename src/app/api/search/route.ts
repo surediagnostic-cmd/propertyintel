@@ -20,6 +20,20 @@ const criteriaSchema = z.object({
   bathrooms: z.number().int().min(0),
   mustHaveAmenities: z.array(z.string()).default([]),
   notes: z.string().optional(),
+  apartmentType: z.enum(["flat", "maisonette", "duplex", "penthouse"]).optional(),
+  furnishedPreference: z.enum(["furnished", "unfurnished", "either"]).default("either"),
+  commute: z.string().optional(),
+  moveInTimeline: z.enum(["immediately", "within-1-month", "within-3-months"]).default("within-1-month"),
+  agencyPreference: z.enum(["direct-landlord", "mandate-agent", "either"]).default("either"),
+  maxFloor: z.enum(["Ground", "1st", "2nd", "no-limit"]).default("no-limit"),
+  estateRequirement: z.enum(["required", "preferred", "no-preference"]).default("no-preference"),
+  minParkingSpaces: z.number().int().min(0).default(0),
+  roadConditionRequirement: z.enum(["excellent-only", "fair-acceptable", "no-preference"]).default("no-preference"),
+  avoidFloodProne: z.boolean().default(false),
+  avoidNoisyAreas: z.boolean().default(false),
+  requirePrepaidMeter: z.boolean().default(false),
+  maxUnitsInCompound: z.number().int().min(1).optional(),
+  maxBuildingAgeYears: z.number().int().min(0).optional(),
 });
 
 export async function POST(request: Request) {

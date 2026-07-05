@@ -4,22 +4,74 @@ import { getMockNeighborhoodSignal } from "@/lib/scraping/mockNeighborhoodSignal
 const MIN_SHORTLIST_SIZE = 5;
 const MAX_SHORTLIST_SIZE = 7;
 const FRESHNESS_WINDOW_HOURS = 72;
+const FLOOR_RANK: Record<string, number> = { Ground: 0, "1st": 1, "2nd": 2, "3rd+": 3 };
 
 /**
  * Hard eligibility gate applied before scoring: a listing only makes the
- * shortlist if it's been verified in the last 72 hours and we have contact
- * details for whoever holds the mandate to let/sell it. Neither of these is
- * a scoring factor — listings that fail either check are excluded outright.
+ * shortlist if it's been verified in the last 72 hours, we have contact
+ * details for whoever holds the mandate to let/sell it, and it doesn't fail
+ * any dealbreaker the client actually stated. A dealbreaker only excludes a
+ * listing when the listing itself states the relevant field — missing data
+ * never causes exclusion (see getUnconfirmedDealbreakers for that case).
  */
-export function isShortlistEligible(listing: Listing, now: Date = new Date()): boolean {
+export function isShortlistEligible(listing: Listing, criteria: SearchCriteria, now: Date = new Date()): boolean {
   const scrapedAt = new Date(listing.source.scrapedAt).getTime();
   const ageHours = (now.getTime() - scrapedAt) / (1000 * 60 * 60);
   const isFresh = ageHours >= 0 && ageHours <= FRESHNESS_WINDOW_HOURS;
 
   const contact = listing.mandateContact;
   const hasMandateContact = Boolean(contact && contact.name.trim() && contact.phone.trim());
+  if (!isFresh || !hasMandateContact) return false;
 
-  return isFresh && hasMandateContact;
+  if (criteria.minParkingSpaces > 0 && listing.parkingSpaces !== undefined && listing.parkingSpaces < criteria.minParkingSpaces) {
+    return false;
+  }
+  if (criteria.avoidFloodProne && listing.floodProne === true) return false;
+  if (criteria.avoidNoisyAreas && listing.noiseLevel === "noisy") return false;
+  if (criteria.requirePrepaidMeter && listing.hasPrepaidMeter === false) return false;
+  if (criteria.roadConditionRequirement === "excellent-only" && listing.roadCondition !== undefined && listing.roadCondition !== "excellent") {
+    return false;
+  }
+  if (criteria.maxUnitsInCompound !== undefined && listing.unitsInCompound !== undefined && listing.unitsInCompound > criteria.maxUnitsInCompound) {
+    return false;
+  }
+  if (criteria.maxBuildingAgeYears !== undefined && listing.buildingAgeYears !== undefined && listing.buildingAgeYears > criteria.maxBuildingAgeYears) {
+    return false;
+  }
+  if (criteria.estateRequirement === "required" && !listing.amenities.includes("gated estate")) return false;
+  if (criteria.apartmentType && listing.apartmentType && listing.apartmentType !== criteria.apartmentType) return false;
+  if (criteria.maxFloor && criteria.maxFloor !== "no-limit" && listing.floor) {
+    const maxRank = FLOOR_RANK[criteria.maxFloor];
+    const listingRank = FLOOR_RANK[listing.floor];
+    if (listingRank !== undefined && listingRank > maxRank) return false;
+  }
+
+  return true;
+}
+
+/**
+ * Dealbreakers the client stated but this listing has no data for — the
+ * listing stays eligible (we won't punish it for a field nobody filled in),
+ * but the agent should see this and verify manually before recommending it.
+ */
+export function getUnconfirmedDealbreakers(listing: Listing, criteria: SearchCriteria): string[] {
+  const unconfirmed: string[] = [];
+  if (criteria.minParkingSpaces > 0 && listing.parkingSpaces === undefined) {
+    unconfirmed.push(`Parking (needs ${criteria.minParkingSpaces}+)`);
+  }
+  if (criteria.avoidFloodProne && listing.floodProne === undefined) unconfirmed.push("Flood risk");
+  if (criteria.avoidNoisyAreas && listing.noiseLevel === undefined) unconfirmed.push("Noise level");
+  if (criteria.requirePrepaidMeter && listing.hasPrepaidMeter === undefined) unconfirmed.push("Prepaid meter");
+  if (criteria.roadConditionRequirement === "excellent-only" && listing.roadCondition === undefined) {
+    unconfirmed.push("Road condition");
+  }
+  if (criteria.maxUnitsInCompound !== undefined && listing.unitsInCompound === undefined) {
+    unconfirmed.push(`Units in compound (max ${criteria.maxUnitsInCompound})`);
+  }
+  if (criteria.maxBuildingAgeYears !== undefined && listing.buildingAgeYears === undefined) {
+    unconfirmed.push("Building age");
+  }
+  return unconfirmed;
 }
 
 /**
@@ -78,14 +130,16 @@ export function scoreListing(listing: Listing, criteria: SearchCriteria): { scor
  */
 export function buildShortlist(listings: Listing[], criteria: SearchCriteria): ShortlistItem[] {
   const ranked = listings
-    .filter((listing) => isShortlistEligible(listing))
+    .filter((listing) => isShortlistEligible(listing, criteria))
     .map((listing) => {
       const { score, reasons } = scoreListing(listing, criteria);
+      const unconfirmedDealbreakers = getUnconfirmedDealbreakers(listing, criteria);
       return {
         listing,
         matchScore: score,
         matchReasons: reasons,
         neighborhoodSignal: getMockNeighborhoodSignal(listing.city, listing.neighborhood),
+        unconfirmedDealbreakers: unconfirmedDealbreakers.length > 0 ? unconfirmedDealbreakers : undefined,
       };
     })
     .sort((a, b) => b.matchScore - a.matchScore);

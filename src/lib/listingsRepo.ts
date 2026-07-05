@@ -27,6 +27,13 @@ export function listingToRow(listing: Listing) {
     parking_spaces: listing.parkingSpaces ?? null,
     floor: listing.floor ?? null,
     posted_at: listing.postedAt ?? null,
+    apartment_type: listing.apartmentType ?? null,
+    road_condition: listing.roadCondition ?? null,
+    flood_prone: listing.floodProne ?? null,
+    noise_level: listing.noiseLevel ?? null,
+    has_prepaid_meter: listing.hasPrepaidMeter ?? null,
+    units_in_compound: listing.unitsInCompound ?? null,
+    building_age_years: listing.buildingAgeYears ?? null,
   };
 }
 
@@ -60,6 +67,13 @@ export function rowToListing(row: any): Listing {
     parkingSpaces: row.parking_spaces ?? undefined,
     floor: row.floor ?? undefined,
     postedAt: row.posted_at ?? undefined,
+    apartmentType: row.apartment_type ?? undefined,
+    roadCondition: row.road_condition ?? undefined,
+    floodProne: row.flood_prone ?? undefined,
+    noiseLevel: row.noise_level ?? undefined,
+    hasPrepaidMeter: row.has_prepaid_meter ?? undefined,
+    unitsInCompound: row.units_in_compound ?? undefined,
+    buildingAgeYears: row.building_age_years ?? undefined,
   };
 }
 

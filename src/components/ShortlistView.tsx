@@ -45,7 +45,35 @@ export function ShortlistView({
         {criteria.intent} in {criteria.city} · {formatNaira(criteria.minBudget)}–{formatNaira(criteria.maxBudget)} ·{" "}
         {criteria.bedrooms} bed / {criteria.bathrooms} bath
         {criteria.neighborhoods.length > 0 && <> · {criteria.neighborhoods.join(", ")}</>}
+        {criteria.apartmentType && <> · {criteria.apartmentType}</>}
+        {criteria.furnishedPreference && criteria.furnishedPreference !== "either" && <> · {criteria.furnishedPreference}</>}
       </p>
+      {(criteria.minParkingSpaces > 0 ||
+        criteria.avoidFloodProne ||
+        criteria.avoidNoisyAreas ||
+        criteria.requirePrepaidMeter ||
+        criteria.roadConditionRequirement !== "no-preference" ||
+        criteria.maxUnitsInCompound !== undefined ||
+        criteria.maxBuildingAgeYears !== undefined ||
+        (criteria.maxFloor && criteria.maxFloor !== "no-limit") ||
+        (criteria.estateRequirement && criteria.estateRequirement !== "no-preference")) && (
+        <p className="mt-1 text-sm text-red-700">
+          <span className="font-medium">Dealbreakers: </span>
+          {[
+            criteria.minParkingSpaces > 0 && `${criteria.minParkingSpaces}+ parking`,
+            criteria.avoidFloodProne && "no flood-prone areas",
+            criteria.avoidNoisyAreas && "no noisy areas",
+            criteria.requirePrepaidMeter && "must have prepaid meter",
+            criteria.roadConditionRequirement === "excellent-only" && "excellent roads only",
+            criteria.maxUnitsInCompound !== undefined && `max ${criteria.maxUnitsInCompound} flats in compound`,
+            criteria.maxBuildingAgeYears !== undefined && `max ${criteria.maxBuildingAgeYears}yr old building`,
+            criteria.maxFloor && criteria.maxFloor !== "no-limit" && `max floor: ${criteria.maxFloor}`,
+            criteria.estateRequirement === "required" && "gated estate required",
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      )}
 
       <div className="mt-8 space-y-6">
         {items.map((item, i) => (
@@ -103,6 +131,13 @@ export function ShortlistView({
               <p className="mt-1 text-sm text-neutral-500">
                 <span className="font-medium">Why it matches: </span>
                 {item.matchReasons.join(" · ")}
+              </p>
+            )}
+
+            {item.unconfirmedDealbreakers && item.unconfirmedDealbreakers.length > 0 && (
+              <p className="mt-2 rounded bg-yellow-50 p-3 text-sm text-yellow-800">
+                <span className="font-medium">Unconfirmed — please verify: </span>
+                {item.unconfirmedDealbreakers.join(", ")}
               </p>
             )}
 

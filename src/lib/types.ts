@@ -2,6 +2,14 @@ export type ListingIntent = "rent" | "lease" | "buy";
 
 export type City = "Lagos" | "Abuja" | "Port Harcourt";
 
+export type ApartmentType = "flat" | "maisonette" | "duplex" | "penthouse";
+export type FloorLevel = "Ground" | "1st" | "2nd" | "3rd+";
+export type EstateRequirement = "required" | "preferred" | "no-preference";
+export type RoadConditionRequirement = "excellent-only" | "fair-acceptable" | "no-preference";
+export type FurnishedPreference = "furnished" | "unfurnished" | "either";
+export type MoveInTimeline = "immediately" | "within-1-month" | "within-3-months";
+export type AgencyPreference = "direct-landlord" | "mandate-agent" | "either";
+
 export interface SearchCriteria {
   intent: ListingIntent;
   city: City;
@@ -12,6 +20,25 @@ export interface SearchCriteria {
   bathrooms: number;
   mustHaveAmenities: string[]; // e.g. ["water treatment", "generator", "24hr power"]
   notes?: string; // raw free-text from conversational intake, kept for the agent
+
+  // Preferences (soft — inform scoring/display, never a hard exclusion)
+  apartmentType?: ApartmentType;
+  furnishedPreference?: FurnishedPreference;
+  commute?: string; // where the client works most often, informational only
+  moveInTimeline?: MoveInTimeline;
+  agencyPreference?: AgencyPreference;
+
+  // Dealbreakers (hard — excludes a listing outright, but only when the
+  // listing actually states the relevant field; see isShortlistEligible)
+  maxFloor?: FloorLevel | "no-limit";
+  estateRequirement?: EstateRequirement;
+  minParkingSpaces: number; // 0 = no requirement
+  roadConditionRequirement: RoadConditionRequirement;
+  avoidFloodProne: boolean;
+  avoidNoisyAreas: boolean;
+  requirePrepaidMeter: boolean;
+  maxUnitsInCompound?: number;
+  maxBuildingAgeYears?: number;
 }
 
 export interface ListingSource {
@@ -55,8 +82,15 @@ export interface Listing {
   feeBreakdown?: FeeBreakdown;
   furnished?: boolean;
   parkingSpaces?: number;
-  floor?: string; // e.g. "Ground", "1st", "Duplex"
+  floor?: FloorLevel;
   postedAt?: string; // when the listing was originally posted, distinct from source.scrapedAt
+  apartmentType?: ApartmentType;
+  roadCondition?: "excellent" | "fair" | "poor";
+  floodProne?: boolean;
+  noiseLevel?: "quiet" | "moderate" | "noisy";
+  hasPrepaidMeter?: boolean;
+  unitsInCompound?: number;
+  buildingAgeYears?: number;
 }
 
 export interface NeighborhoodSignal {
@@ -77,6 +111,10 @@ export interface ShortlistItem {
   neighborhoodSignal?: NeighborhoodSignal;
   addedByClient?: boolean; // client-picked, bypasses the eligibility gate entirely
   agentRating?: AgentRating;
+  // Dealbreakers the client stated but this listing has no data for — not
+  // excluded (we won't penalize a listing for a field nobody filled in),
+  // but flagged so the agent knows to verify before recommending it.
+  unconfirmedDealbreakers?: string[];
 }
 
 export interface ClientContact {

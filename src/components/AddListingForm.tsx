@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { City, ListingIntent } from "@/lib/types";
+import type { ApartmentType, City, FloorLevel, ListingIntent } from "@/lib/types";
 import { AMENITY_OPTIONS } from "@/lib/neighborhoods";
 
 export function AddListingForm() {
@@ -17,7 +17,14 @@ export function AddListingForm() {
   const [amenities, setAmenities] = useState<string[]>([]);
   const [furnished, setFurnished] = useState(false);
   const [parkingSpaces, setParkingSpaces] = useState(0);
-  const [floor, setFloor] = useState("");
+  const [floor, setFloor] = useState<FloorLevel | "">("");
+  const [apartmentType, setApartmentType] = useState<ApartmentType | "">("");
+  const [roadCondition, setRoadCondition] = useState<"" | "excellent" | "fair" | "poor">("");
+  const [floodProne, setFloodProne] = useState<"" | "yes" | "no">("");
+  const [noiseLevel, setNoiseLevel] = useState<"" | "quiet" | "moderate" | "noisy">("");
+  const [hasPrepaidMeter, setHasPrepaidMeter] = useState<"" | "yes" | "no">("");
+  const [unitsInCompound, setUnitsInCompound] = useState<number | "">("");
+  const [buildingAgeYears, setBuildingAgeYears] = useState<number | "">("");
   const [agencyFee, setAgencyFee] = useState(0);
   const [agreementFee, setAgreementFee] = useState(0);
   const [legalFee, setLegalFee] = useState(0);
@@ -94,6 +101,13 @@ export function AddListingForm() {
           furnished,
           parkingSpaces,
           floor: floor || undefined,
+          apartmentType: apartmentType || undefined,
+          roadCondition: roadCondition || undefined,
+          floodProne: floodProne === "" ? undefined : floodProne === "yes",
+          noiseLevel: noiseLevel || undefined,
+          hasPrepaidMeter: hasPrepaidMeter === "" ? undefined : hasPrepaidMeter === "yes",
+          unitsInCompound: unitsInCompound === "" ? undefined : unitsInCompound,
+          buildingAgeYears: buildingAgeYears === "" ? undefined : buildingAgeYears,
           agencyFee: agencyFee || undefined,
           agreementFee: agreementFee || undefined,
           legalFee: legalFee || undefined,
@@ -252,18 +266,118 @@ export function AddListingForm() {
         </label>
         <label className="block">
           <span className="text-sm font-medium">Floor</span>
-          <input
-            type="text"
+          <select
             value={floor}
-            onChange={(e) => setFloor(e.target.value)}
-            placeholder="e.g. Ground, 1st"
+            onChange={(e) => setFloor(e.target.value as FloorLevel | "")}
             className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
-          />
+          >
+            <option value="">Not specified</option>
+            <option value="Ground">Ground</option>
+            <option value="1st">1st</option>
+            <option value="2nd">2nd</option>
+            <option value="3rd+">3rd+</option>
+          </select>
         </label>
         <label className="flex items-center gap-2 pt-6">
           <input type="checkbox" checked={furnished} onChange={(e) => setFurnished(e.target.checked)} />
           <span className="text-sm font-medium">Furnished</span>
         </label>
+      </div>
+
+      <div className="rounded-lg border border-neutral-200 p-4">
+        <p className="text-sm font-medium">Dealbreaker-relevant details</p>
+        <p className="text-xs text-neutral-500">
+          Leave anything you&apos;re not sure of as &quot;Not specified&quot; — clients who care about
+          it will see it flagged as unconfirmed rather than wrongly assumed.
+        </p>
+        <div className="mt-3 grid grid-cols-3 gap-4">
+          <label className="block">
+            <span className="text-xs">Apartment type</span>
+            <select
+              value={apartmentType}
+              onChange={(e) => setApartmentType(e.target.value as ApartmentType | "")}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            >
+              <option value="">Not specified</option>
+              <option value="flat">Flat</option>
+              <option value="maisonette">Maisonette</option>
+              <option value="duplex">Duplex</option>
+              <option value="penthouse">Penthouse</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs">Road condition</span>
+            <select
+              value={roadCondition}
+              onChange={(e) => setRoadCondition(e.target.value as typeof roadCondition)}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            >
+              <option value="">Not specified</option>
+              <option value="excellent">Excellent</option>
+              <option value="fair">Fair</option>
+              <option value="poor">Poor</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs">Noise level</span>
+            <select
+              value={noiseLevel}
+              onChange={(e) => setNoiseLevel(e.target.value as typeof noiseLevel)}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            >
+              <option value="">Not specified</option>
+              <option value="quiet">Quiet</option>
+              <option value="moderate">Moderate</option>
+              <option value="noisy">Noisy</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs">Flood-prone?</span>
+            <select
+              value={floodProne}
+              onChange={(e) => setFloodProne(e.target.value as typeof floodProne)}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            >
+              <option value="">Not sure</option>
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs">Has prepaid meter?</span>
+            <select
+              value={hasPrepaidMeter}
+              onChange={(e) => setHasPrepaidMeter(e.target.value as typeof hasPrepaidMeter)}
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            >
+              <option value="">Not sure</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs">Flats in compound</span>
+            <input
+              type="number"
+              value={unitsInCompound}
+              onChange={(e) => setUnitsInCompound(e.target.value === "" ? "" : Number(e.target.value))}
+              min={1}
+              placeholder="Not specified"
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs">Building age (years)</span>
+            <input
+              type="number"
+              value={buildingAgeYears}
+              onChange={(e) => setBuildingAgeYears(e.target.value === "" ? "" : Number(e.target.value))}
+              min={0}
+              placeholder="Not specified"
+              className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
+            />
+          </label>
+        </div>
       </div>
 
       <div>

@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import type { AgentRating, ClientContact, Listing, SearchCriteria, Shortlist, ShortlistItem } from "@/lib/types";
 import { getMockNeighborhoodSignal } from "@/lib/scraping/mockNeighborhoodSignals";
-import { scoreListing } from "@/lib/matching/score";
+import { getUnconfirmedDealbreakers, scoreListing } from "@/lib/matching/score";
 import { getServerSupabase } from "@/lib/supabase/server";
 import { memoryStore } from "@/lib/store/memoryStore";
 import { listingToRow, rowToListing } from "@/lib/listingsRepo";
@@ -37,6 +37,20 @@ export async function createShortlist(criteria: SearchCriteria, items: Shortlist
       bathrooms: criteria.bathrooms,
       must_have_amenities: criteria.mustHaveAmenities,
       notes: criteria.notes,
+      apartment_type: criteria.apartmentType ?? null,
+      furnished_preference: criteria.furnishedPreference ?? null,
+      commute: criteria.commute ?? null,
+      move_in_timeline: criteria.moveInTimeline ?? null,
+      agency_preference: criteria.agencyPreference ?? null,
+      max_floor: criteria.maxFloor ?? null,
+      estate_requirement: criteria.estateRequirement ?? null,
+      min_parking_spaces: criteria.minParkingSpaces,
+      road_condition_requirement: criteria.roadConditionRequirement,
+      avoid_flood_prone: criteria.avoidFloodProne,
+      avoid_noisy_areas: criteria.avoidNoisyAreas,
+      require_prepaid_meter: criteria.requirePrepaidMeter,
+      max_units_in_compound: criteria.maxUnitsInCompound ?? null,
+      max_building_age_years: criteria.maxBuildingAgeYears ?? null,
     })
     .select("id")
     .single();
@@ -100,11 +114,26 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
     bathrooms: search.bathrooms,
     mustHaveAmenities: search.must_have_amenities ?? [],
     notes: search.notes ?? undefined,
+    apartmentType: search.apartment_type ?? undefined,
+    furnishedPreference: search.furnished_preference ?? undefined,
+    commute: search.commute ?? undefined,
+    moveInTimeline: search.move_in_timeline ?? undefined,
+    agencyPreference: search.agency_preference ?? undefined,
+    maxFloor: search.max_floor ?? undefined,
+    estateRequirement: search.estate_requirement ?? undefined,
+    minParkingSpaces: search.min_parking_spaces ?? 0,
+    roadConditionRequirement: search.road_condition_requirement ?? "no-preference",
+    avoidFloodProne: search.avoid_flood_prone ?? false,
+    avoidNoisyAreas: search.avoid_noisy_areas ?? false,
+    requirePrepaidMeter: search.require_prepaid_meter ?? false,
+    maxUnitsInCompound: search.max_units_in_compound ?? undefined,
+    maxBuildingAgeYears: search.max_building_age_years ?? undefined,
   };
 
   const items: ShortlistItem[] = (itemRows ?? []).map((row) => {
     const listingRow = Array.isArray(row.listings) ? row.listings[0] : row.listings;
     const listing = rowToListing(listingRow);
+    const unconfirmedDealbreakers = getUnconfirmedDealbreakers(listing, criteria);
     return {
       listing,
       matchScore: row.match_score,
@@ -112,6 +141,7 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
       neighborhoodSignal: getMockNeighborhoodSignal(listing.city, listing.neighborhood),
       addedByClient: row.added_by_client ?? false,
       agentRating: row.agent_rating ?? undefined,
+      unconfirmedDealbreakers: unconfirmedDealbreakers.length > 0 ? unconfirmedDealbreakers : undefined,
     };
   });
 
