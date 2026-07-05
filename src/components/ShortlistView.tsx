@@ -4,7 +4,13 @@ function formatNaira(amount: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount);
 }
 
-export function ShortlistView({ shortlist }: { shortlist: Shortlist }) {
+export function ShortlistView({
+  shortlist,
+  showMandateContact = false,
+}: {
+  shortlist: Shortlist;
+  showMandateContact?: boolean;
+}) {
   const { criteria, items } = shortlist;
 
   return (
@@ -59,6 +65,14 @@ export function ShortlistView({ shortlist }: { shortlist: Shortlist }) {
                 view original listing
               </a>
             </p>
+
+            {showMandateContact && item.listing.mandateContact && (
+              <p className="mt-2 rounded bg-amber-50 p-3 text-sm text-neutral-700">
+                <span className="font-medium">Mandate contact: </span>
+                {item.listing.mandateContact.name} · {item.listing.mandateContact.phone}
+                {item.listing.mandateContact.email && <> · {item.listing.mandateContact.email}</>}
+              </p>
+            )}
           </div>
         ))}
       </div>

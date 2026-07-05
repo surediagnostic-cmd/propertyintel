@@ -1,8 +1,15 @@
 import type { City, Listing, ListingIntent } from "@/lib/types";
 import type { ListingSourceAdapter } from "./adapter";
 
+function hoursAgo(hours: number) {
+  return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+}
+
 // Clearly-marked placeholder inventory standing in for real scraped data
 // until source-site adapters are built (see CLAUDE.md open questions).
+// scrapedAt is deliberately varied — a couple of entries are past the 72h
+// freshness window, and one has no mandateContact, so buildShortlist's
+// eligibility filter has something real to exclude.
 const MOCK_LISTINGS: Listing[] = [
   {
     id: "mock-1",
@@ -15,7 +22,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 4,
     amenities: ["24hr power", "water treatment", "gated estate"],
     photos: [],
-    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-1", scrapedAt: new Date().toISOString() },
+    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-1", scrapedAt: hoursAgo(5) },
+    mandateContact: { name: "Adebayo Okafor", phone: "+234 802 123 4567" },
   },
   {
     id: "mock-2",
@@ -28,7 +36,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 4,
     amenities: ["generator", "gated estate", "swimming pool"],
     photos: [],
-    source: { site: "NigeriaPropertyCentre", url: "https://nigeriapropertycentre.com/mock-2", scrapedAt: new Date().toISOString() },
+    source: { site: "NigeriaPropertyCentre", url: "https://nigeriapropertycentre.com/mock-2", scrapedAt: hoursAgo(20) },
+    mandateContact: { name: "Funke Adeyemi", phone: "+234 803 234 5678", email: "funke.adeyemi@example.com" },
   },
   {
     id: "mock-3",
@@ -41,7 +50,9 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 2,
     amenities: ["24hr power", "gated estate"],
     photos: [],
-    source: { site: "Jiji", url: "https://jiji.ng/mock-3", scrapedAt: new Date().toISOString() },
+    // Stale: last verified 90 hours ago, past the 72h freshness window.
+    source: { site: "Jiji", url: "https://jiji.ng/mock-3", scrapedAt: hoursAgo(90) },
+    mandateContact: { name: "Chinedu Eze", phone: "+234 804 345 6789" },
   },
   {
     id: "mock-4",
@@ -54,7 +65,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 3,
     amenities: ["water treatment", "generator"],
     photos: [],
-    source: { site: "Hutbay", url: "https://hutbay.com/mock-4", scrapedAt: new Date().toISOString() },
+    // Fresh, but no mandate contact on file yet — excluded until one is added.
+    source: { site: "Hutbay", url: "https://hutbay.com/mock-4", scrapedAt: hoursAgo(10) },
   },
   {
     id: "mock-5",
@@ -67,7 +79,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 2,
     amenities: ["24hr power"],
     photos: [],
-    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-5", scrapedAt: new Date().toISOString() },
+    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-5", scrapedAt: hoursAgo(2) },
+    mandateContact: { name: "Ngozi Umeh", phone: "+234 805 456 7890" },
   },
   {
     id: "mock-6",
@@ -80,7 +93,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 6,
     amenities: ["swimming pool", "bq", "gated estate", "24hr power"],
     photos: [],
-    source: { site: "NigeriaPropertyCentre", url: "https://nigeriapropertycentre.com/mock-6", scrapedAt: new Date().toISOString() },
+    source: { site: "NigeriaPropertyCentre", url: "https://nigeriapropertycentre.com/mock-6", scrapedAt: hoursAgo(30) },
+    mandateContact: { name: "Tunde Bakare", phone: "+234 806 567 8901", email: "tunde.bakare@example.com" },
   },
   {
     id: "mock-7",
@@ -93,7 +107,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 3,
     amenities: ["24hr power", "gated estate"],
     photos: [],
-    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-7", scrapedAt: new Date().toISOString() },
+    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-7", scrapedAt: hoursAgo(8) },
+    mandateContact: { name: "Amina Bello", phone: "+234 807 678 9012" },
   },
   {
     id: "mock-8",
@@ -106,7 +121,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 5,
     amenities: ["swimming pool", "generator", "gated estate"],
     photos: [],
-    source: { site: "Hutbay", url: "https://hutbay.com/mock-8", scrapedAt: new Date().toISOString() },
+    source: { site: "Hutbay", url: "https://hutbay.com/mock-8", scrapedAt: hoursAgo(12) },
+    mandateContact: { name: "Ibrahim Musa", phone: "+234 808 789 0123" },
   },
   {
     id: "mock-9",
@@ -119,7 +135,9 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 2,
     amenities: ["24hr power", "water treatment"],
     photos: [],
-    source: { site: "Jiji", url: "https://jiji.ng/mock-9", scrapedAt: new Date().toISOString() },
+    // Stale: last verified 100 hours ago, past the 72h freshness window.
+    source: { site: "Jiji", url: "https://jiji.ng/mock-9", scrapedAt: hoursAgo(100) },
+    mandateContact: { name: "Grace Okon", phone: "+234 809 890 1234" },
   },
   {
     id: "mock-10",
@@ -132,7 +150,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 3,
     amenities: ["generator", "gated estate"],
     photos: [],
-    source: { site: "NigeriaPropertyCentre", url: "https://nigeriapropertycentre.com/mock-10", scrapedAt: new Date().toISOString() },
+    source: { site: "NigeriaPropertyCentre", url: "https://nigeriapropertycentre.com/mock-10", scrapedAt: hoursAgo(6) },
+    mandateContact: { name: "Ekene Nwachukwu", phone: "+234 810 901 2345" },
   },
   {
     id: "mock-11",
@@ -145,7 +164,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 4,
     amenities: ["24hr power", "water treatment", "gated estate"],
     photos: [],
-    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-11", scrapedAt: new Date().toISOString() },
+    source: { site: "PropertyPro", url: "https://propertypro.ng/mock-11", scrapedAt: hoursAgo(15) },
+    mandateContact: { name: "Blessing Amadi", phone: "+234 811 012 3456", email: "blessing.amadi@example.com" },
   },
   {
     id: "mock-12",
@@ -158,7 +178,8 @@ const MOCK_LISTINGS: Listing[] = [
     bathrooms: 3,
     amenities: ["generator"],
     photos: [],
-    source: { site: "Jiji", url: "https://jiji.ng/mock-12", scrapedAt: new Date().toISOString() },
+    source: { site: "Jiji", url: "https://jiji.ng/mock-12", scrapedAt: hoursAgo(40) },
+    mandateContact: { name: "Emeka Chukwu", phone: "+234 812 123 4567" },
   },
 ];
 

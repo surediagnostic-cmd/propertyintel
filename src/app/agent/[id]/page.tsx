@@ -15,7 +15,7 @@ export default async function AgentShortlistPage({ params }: { params: Promise<{
         ← Back to dashboard
       </Link>
       <h1 className="mt-2 text-2xl font-semibold">Shortlist review</h1>
-      <ShortlistView shortlist={shortlist} />
+      <ShortlistView shortlist={shortlist} showMandateContact />
       <AgentNotesForm shortlistId={shortlist.id} initialNotes={shortlist.agentNotes} />
     </main>
   );

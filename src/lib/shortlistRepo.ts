@@ -64,6 +64,9 @@ export async function createShortlist(criteria: SearchCriteria, items: Shortlist
           source_site: item.listing.source.site,
           source_url: item.listing.source.url,
           scraped_at: item.listing.source.scrapedAt,
+          contact_name: item.listing.mandateContact?.name ?? null,
+          contact_phone: item.listing.mandateContact?.phone ?? null,
+          contact_email: item.listing.mandateContact?.email ?? null,
         },
         { onConflict: "source_url" },
       )
@@ -134,6 +137,13 @@ export async function getShortlist(id: string): Promise<Shortlist | undefined> {
         url: listingRow.source_url,
         scrapedAt: listingRow.scraped_at,
       },
+      mandateContact: listingRow.contact_name
+        ? {
+            name: listingRow.contact_name,
+            phone: listingRow.contact_phone,
+            email: listingRow.contact_email ?? undefined,
+          }
+        : undefined,
     };
     return {
       listing,

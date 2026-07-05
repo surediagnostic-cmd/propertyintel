@@ -17,7 +17,16 @@ export interface SearchCriteria {
 export interface ListingSource {
   site: "PropertyPro" | "NigeriaPropertyCentre" | "Jiji" | "Hutbay" | "Manual";
   url: string;
-  scrapedAt: string; // ISO timestamp
+  scrapedAt: string; // ISO timestamp — doubles as the last-verified freshness check
+}
+
+// The person authorized to let/sell the property (owner or mandated agent) —
+// required for a listing to be shortlist-eligible, so an agent can always
+// reach the right person to arrange a viewing.
+export interface MandateContact {
+  name: string;
+  phone: string;
+  email?: string;
 }
 
 export interface Listing {
@@ -32,6 +41,7 @@ export interface Listing {
   amenities: string[];
   photos: string[];
   source: ListingSource;
+  mandateContact?: MandateContact;
 }
 
 export interface NeighborhoodSignal {
