@@ -55,9 +55,13 @@ function sleep(ms: number) {
 async function fetchHtml(url: string): Promise<string | null> {
   try {
     const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[propertyProAdapter] ${url} -> HTTP ${res.status}`);
+      return null;
+    }
     return await res.text();
-  } catch {
+  } catch (err) {
+    console.error(`[propertyProAdapter] fetch failed for ${url}:`, err);
     return null;
   }
 }
