@@ -331,7 +331,7 @@ export default function SearchPage() {
           </p>
           <div className="mt-3 grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-sm">Minimum parking spaces</span>
+              <span className="text-sm">Minimum parking spaces (per flat)</span>
               <input
                 type="number"
                 value={minParkingSpaces}

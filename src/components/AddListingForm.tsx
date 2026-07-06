@@ -255,7 +255,7 @@ export function AddListingForm() {
 
       <div className="grid grid-cols-3 gap-4">
         <label className="block">
-          <span className="text-sm font-medium">Parking spaces</span>
+          <span className="text-sm font-medium">Parking spaces (for this flat)</span>
           <input
             type="number"
             value={parkingSpaces}
