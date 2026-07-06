@@ -1,5 +1,6 @@
 import type { AgentRating, FeeBreakdown, Shortlist } from "@/lib/types";
 import { AgentRatingControl } from "@/components/AgentRatingControl";
+import { ClientCriteriaSummary } from "@/components/ClientCriteriaSummary";
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(amount);
@@ -41,39 +42,7 @@ export function ShortlistView({
 
   return (
     <>
-      <p className="text-sm text-neutral-500">
-        {criteria.intent} in {criteria.city} · {formatNaira(criteria.minBudget)}–{formatNaira(criteria.maxBudget)} ·{" "}
-        {criteria.bedrooms} bed / {criteria.bathrooms} bath
-        {criteria.neighborhoods.length > 0 && <> · {criteria.neighborhoods.join(", ")}</>}
-        {criteria.apartmentType && <> · {criteria.apartmentType}</>}
-        {criteria.furnishedPreference && criteria.furnishedPreference !== "either" && <> · {criteria.furnishedPreference}</>}
-      </p>
-      {(criteria.minParkingSpaces > 0 ||
-        criteria.avoidFloodProne ||
-        criteria.avoidNoisyAreas ||
-        criteria.requirePrepaidMeter ||
-        criteria.roadConditionRequirement !== "no-preference" ||
-        criteria.maxUnitsInCompound !== undefined ||
-        criteria.maxBuildingAgeYears !== undefined ||
-        (criteria.maxFloor && criteria.maxFloor !== "no-limit") ||
-        (criteria.estateRequirement && criteria.estateRequirement !== "no-preference")) && (
-        <p className="mt-1 text-sm text-red-700">
-          <span className="font-medium">Dealbreakers: </span>
-          {[
-            criteria.minParkingSpaces > 0 && `${criteria.minParkingSpaces}+ parking`,
-            criteria.avoidFloodProne && "no flood-prone areas",
-            criteria.avoidNoisyAreas && "no noisy areas",
-            criteria.requirePrepaidMeter && "must have prepaid meter",
-            criteria.roadConditionRequirement === "excellent-only" && "excellent roads only",
-            criteria.maxUnitsInCompound !== undefined && `max ${criteria.maxUnitsInCompound} flats in compound`,
-            criteria.maxBuildingAgeYears !== undefined && `max ${criteria.maxBuildingAgeYears}yr old building`,
-            criteria.maxFloor && criteria.maxFloor !== "no-limit" && `max floor: ${criteria.maxFloor}`,
-            criteria.estateRequirement === "required" && "gated estate required",
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      )}
+      <ClientCriteriaSummary criteria={criteria} />
 
       <div className="mt-8 space-y-6">
         {items.map((item, i) => (
@@ -189,13 +158,6 @@ export function ShortlistView({
           </div>
         ))}
       </div>
-
-      {criteria.notes && (
-        <p className="mt-8 text-sm text-neutral-500">
-          <span className="font-medium">Client notes: </span>
-          {criteria.notes}
-        </p>
-      )}
     </>
   );
 }

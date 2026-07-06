@@ -14,7 +14,15 @@ export default async function AgentShortlistPage({ params }: { params: Promise<{
       <Link href="/agent" className="text-sm text-neutral-500 underline">
         ← Back to dashboard
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold">Shortlist review</h1>
+      <div className="mt-2 flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Shortlist review</h1>
+        <Link
+          href={`/agent/add-listing?shortlistId=${shortlist.id}`}
+          className="whitespace-nowrap rounded bg-neutral-900 px-4 py-2 text-sm text-white"
+        >
+          + Add a listing for this client
+        </Link>
+      </div>
       <ShortlistView shortlist={shortlist} showMandateContact />
       <AgentNotesForm shortlistId={shortlist.id} initialNotes={shortlist.agentNotes} />
     </main>
