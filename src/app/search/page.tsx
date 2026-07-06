@@ -20,6 +20,7 @@ export default function SearchPage() {
   const [intent, setIntent] = useState<ListingIntent>("rent");
   const [city, setCity] = useState<City>("Lagos");
   const [neighborhoods, setNeighborhoods] = useState<string[]>([]);
+  const [expandedArea, setExpandedArea] = useState<string | null>(null);
   const [minBudget, setMinBudget] = useState(1_000_000);
   const [maxBudget, setMaxBudget] = useState(10_000_000);
   const [bedrooms, setBedrooms] = useState(2);
@@ -128,6 +129,7 @@ export default function SearchPage() {
               onChange={(e) => {
                 setCity(e.target.value as City);
                 setNeighborhoods([]);
+                setExpandedArea(null);
               }}
               className="mt-1 w-full rounded border border-neutral-300 px-3 py-2"
             >
@@ -141,21 +143,63 @@ export default function SearchPage() {
         <div>
           <span className="text-sm font-medium">Preferred neighborhoods (optional)</span>
           <div className="mt-2 flex flex-wrap gap-2">
-            {availableNeighborhoods.map((n) => (
-              <button
-                type="button"
-                key={n}
-                onClick={() => toggle(neighborhoods, setNeighborhoods, n)}
-                className={`rounded-full border px-3 py-1 text-sm ${
-                  neighborhoods.includes(n)
-                    ? "border-neutral-900 bg-neutral-900 text-white"
-                    : "border-neutral-300"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
+            {availableNeighborhoods.map((area) => {
+              if (!area.subAreas) {
+                return (
+                  <button
+                    type="button"
+                    key={area.name}
+                    onClick={() => toggle(neighborhoods, setNeighborhoods, area.name)}
+                    className={`rounded-full border px-3 py-1 text-sm ${
+                      neighborhoods.includes(area.name)
+                        ? "border-neutral-900 bg-neutral-900 text-white"
+                        : "border-neutral-300"
+                    }`}
+                  >
+                    {area.name}
+                  </button>
+                );
+              }
+
+              const selectedCount = area.subAreas.filter((s) => neighborhoods.includes(s)).length;
+              const isExpanded = expandedArea === area.name;
+              return (
+                <button
+                  type="button"
+                  key={area.name}
+                  onClick={() => setExpandedArea(isExpanded ? null : area.name)}
+                  className={`rounded-full border px-3 py-1 text-sm ${
+                    selectedCount > 0 || isExpanded
+                      ? "border-neutral-900 bg-neutral-900 text-white"
+                      : "border-neutral-300"
+                  }`}
+                >
+                  {area.name} {selectedCount > 0 && `(${selectedCount})`} {isExpanded ? "▲" : "▼"}
+                </button>
+              );
+            })}
           </div>
+
+          {expandedArea && (
+            <div className="mt-2 flex flex-wrap gap-2 rounded-lg border border-neutral-200 p-3">
+              {availableNeighborhoods
+                .find((area) => area.name === expandedArea)
+                ?.subAreas?.map((sub) => (
+                  <button
+                    type="button"
+                    key={sub}
+                    onClick={() => toggle(neighborhoods, setNeighborhoods, sub)}
+                    className={`rounded-full border px-3 py-1 text-sm ${
+                      neighborhoods.includes(sub)
+                        ? "border-neutral-900 bg-neutral-900 text-white"
+                        : "border-neutral-300"
+                    }`}
+                  >
+                    {sub.replace(`, ${expandedArea}`, "")}
+                  </button>
+                ))}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -279,7 +323,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-neutral-900">
           <p className="text-sm font-medium">Dealbreakers</p>
           <p className="text-xs text-neutral-500">
             Listings that fail these are excluded outright — but only when the listing actually

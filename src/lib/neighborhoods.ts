@@ -1,29 +1,43 @@
 import type { City } from "@/lib/types";
 
-export const NEIGHBORHOODS_BY_CITY: Record<City, string[]> = {
+// An area with sub-areas is shown as one chip that expands to reveal its
+// sub-areas (only those get added to the search) — keeps areas with many
+// sub-divisions (like Surulere) from flooding the picker with 15+ buttons.
+// An area with no subAreas is selectable directly, same as before.
+export interface NeighborhoodArea {
+  name: string;
+  subAreas?: string[];
+}
+
+export const NEIGHBORHOODS_BY_CITY: Record<City, NeighborhoodArea[]> = {
   Lagos: [
-    "Lekki Phase 1",
-    "Chevron",
-    "Magodo",
-    "Gbagada",
-    "Bode Thomas, Surulere",
-    "Adeniran Ogunsanya, Surulere",
-    "Adelabu, Surulere",
-    "Aguda, Surulere",
-    "Eric Moore, Surulere",
-    "Iponri, Surulere",
-    "Lawanson, Surulere",
-    "Ojuelegba, Surulere",
-    "Masha, Surulere",
-    "Akerele, Surulere",
-    "Census, Surulere",
-    "Itire, Surulere",
-    "Cole Street, Surulere",
-    "Randle Avenue, Surulere",
-    "Surulere (anywhere)",
+    { name: "Lekki Phase 1" },
+    { name: "Chevron" },
+    { name: "Magodo" },
+    { name: "Gbagada" },
+    {
+      name: "Surulere",
+      subAreas: [
+        "Bode Thomas, Surulere",
+        "Adeniran Ogunsanya, Surulere",
+        "Adelabu, Surulere",
+        "Aguda, Surulere",
+        "Eric Moore, Surulere",
+        "Iponri, Surulere",
+        "Lawanson, Surulere",
+        "Ojuelegba, Surulere",
+        "Masha, Surulere",
+        "Akerele, Surulere",
+        "Census, Surulere",
+        "Itire, Surulere",
+        "Cole Street, Surulere",
+        "Randle Avenue, Surulere",
+        "Surulere (anywhere)",
+      ],
+    },
   ],
-  Abuja: ["Maitama", "Guzape", "Wuse 2"],
-  "Port Harcourt": ["GRA Phase 2", "Old GRA", "Trans Amadi"],
+  Abuja: [{ name: "Maitama" }, { name: "Guzape" }, { name: "Wuse 2" }],
+  "Port Harcourt": [{ name: "GRA Phase 2" }, { name: "Old GRA" }, { name: "Trans Amadi" }],
 };
 
 export const AMENITY_OPTIONS = [

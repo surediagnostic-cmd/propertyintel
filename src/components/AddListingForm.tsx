@@ -427,7 +427,7 @@ export function AddListingForm() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-neutral-900">
         <p className="text-sm font-medium">Mandate contact (required)</p>
         <p className="text-xs text-neutral-500">Whoever has authority to let/sell this property.</p>
         <div className="mt-3 grid grid-cols-2 gap-4">
